@@ -1,0 +1,30 @@
+h1 {
+    padding: 0.77rem 0;
+    background-color: #010c3f;
+    text-align: center;
+    font-family: 'Poiret One', cursive;
+    font-size: 1.88rem;
+    color: #fff;
+}
+
+.highlight {
+    color: #6c41ec;
+}
+
+.App {
+    height: 100%;
+    padding: 0 17% 10% 17%;
+}
+
+.App-playlist {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+@media only screen and (max-width: 1020px) {
+    .App-playlist {
+        flex-direction: column;
+        align-items: center;
+    }
+}
