@@ -2,51 +2,38 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-y: scroll;
     width: 37%;
-    max-height: 950px;
-    padding: 2.27rem 1.16rem;
     background-color: rgba(1, 12, 63, 0.7);
-    box-shadow: 0 4px 2px 2px #000000;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    padding: 2.27rem 1.1rem;
+    border-radius: 10px;
 }
 
-.Playlist input {
+input {
     width: 100%;
     border: 0;
     outline: 0;
     background: transparent;
-    border-bottom: 1px solid #6f6f6f;
-    font-family: 'Poppins', sans-serif;
+    border-bottom: 1px solid #6c41ec;
+    font-family: 'Work Sans', sans-serif;
     font-size: 1.55rem;
     color: #fff;
 }
 
 .Playlist-save {
     cursor: pointer;
-    width: 10rem;
+    width: 12rem;
     padding: .77rem 0;
     border-radius: 54px;
-    border-width: 0px;
+    border: none;
     margin-top: 1.27rem;
     background-color: #6c41ec;
-    text-align: center;
-    font-size: .83rem;
-    transition: background-color .25s;
     color: #fff;
-    font-weight: 500;
+    font-weight: 600;
+    transition: background-color .25s ease-in-out;
 }
 
 .Playlist-save:hover {
-    background-color: rgba(108, 65, 233, .7);
-}
-
-::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
-}
-
-@media only screen and (max-width: 1020px) {
-    .Playlist {
-        width: 90%;
-    }
+    background-color: rgba(108, 65, 236, .7);
+    transform: scale(1.05);
 }

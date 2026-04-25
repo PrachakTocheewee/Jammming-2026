@@ -1,78 +1,68 @@
-import React, { useState, useEffect } from 'react'
+// App.jsx (fix: handle search + remove "response_type must be code" error)
+
+import { useState } from 'react'
 import './App.css'
-import SearchBar from './components/SearchBar/SearchBar'
-import SearchResults from './components/SearchResults/SearchResults'
-import Playlist from './components/Playlist/Playlist'
-import Spotify2 from './utils/Spotify2'
-import ReactGA from 'react-ga4'
 
-// Initialize GA4 ด้วย ID ของคุณ
-ReactGA.initialize('G-2WGTN5Q4ZX')
+export default function App() {
+  const [term, setTerm] = useState('')
+  const [results, setResults] = useState([])
 
-function App() {
-  const [searchResults, setSearchResults] = useState([])
-  const [playlistName, setPlaylistName] = useState('New Playlist')
-  const [playlistTracks, setPlaylistTracks] = useState([])
+  const handleSearch = async () => {
+    if (!term) return
 
-  useEffect(() => {
-    // ส่งข้อมูล Pageview ทุกครั้งที่โหลดหน้าเว็บ
-    ReactGA.send({ hitType: 'pageview', page: window.location.pathname })
+    try {
+      // 🔴 IMPORTANT: replace with your backend or Spotify API later
+      // temporary mock data so UI works
+      const mockResults = [
+        { id: 1, name: 'Song 1', artist: 'Artist A', album: 'Album X' },
+        { id: 2, name: 'Song 2', artist: 'Artist B', album: 'Album Y' },
+      ]
 
-    // ตรวจสอบ Token ตั้งแต่เริ่มโหลดแอปฯ เพื่อลดปัญหาหน้าขาว
-    Spotify2.getAccessToken()
-  }, [])
-
-  const addTrack = (track) => {
-    if (playlistTracks.find((savedTrack) => savedTrack.id === track.id)) {
-      return
+      setResults(mockResults)
+    } catch (err) {
+      console.error(err)
     }
-    setPlaylistTracks([...playlistTracks, track])
-  }
-
-  const removeTrack = (track) => {
-    setPlaylistTracks(
-      playlistTracks.filter((savedTrack) => savedTrack.id !== track.id),
-    )
-  }
-
-  const updatePlaylistName = (name) => {
-    setPlaylistName(name)
-  }
-
-  const savePlaylist = () => {
-    const trackUris = playlistTracks.map((track) => track.uri)
-    Spotify2.savePlaylist(playlistName, trackUris).then(() => {
-      setPlaylistName('New Playlist')
-      setPlaylistTracks([])
-    })
-  }
-
-  const search = (term) => {
-    Spotify2.search(term).then((results) => {
-      setSearchResults(results)
-    })
   }
 
   return (
-    <div>
-      <h1>
-        Ja<span className="highlight">mmm</span>ing
-      </h1>
-      <div className="App">
-        <SearchBar onSearch={search} />
-        <div className="App-playlist">
-          <SearchResults searchResults={searchResults} onAdd={addTrack} />
-          <Playlist
-            playlistName={playlistName}
-            playlistTracks={playlistTracks}
-            onRemove={removeTrack}
-            onNameChange={updatePlaylistName}
-            onSave={savePlaylist}
-          />
+    <div className="app">
+      <header>
+        <h1>Jammming</h1>
+      </header>
+
+      <div className="search-section">
+        <input
+          type="text"
+          placeholder="Enter A Song, Album, or Artist"
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+        />
+        <button onClick={handleSearch}>SEARCH</button>
+      </div>
+
+      <div className="container">
+        <div className="results">
+          <h2>Results</h2>
+
+          {results.length === 0 ? (
+            <p>No results</p>
+          ) : (
+            results.map((track) => (
+              <div key={track.id} className="track">
+                <h3>{track.name}</h3>
+                <p>
+                  {track.artist} | {track.album}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="playlist">
+          <h2>New Playlist</h2>
+          <button>SAVE TO SPOTIFY</button>
         </div>
       </div>
     </div>
   )
 }
-
-export default App

@@ -5,6 +5,7 @@ const clientId = "43ae679652474f76819431e38e322c03";
 const redirectUri = "http://127.0.0.1:5173/";
 
 // แก้ไข URL: เพิ่ม response_type=token และ scope เพื่อให้บันทึก Playlist ได้จริง
+// บรรทัดนี้ต้องเป๊ะทุกตัวอักษรครับ
 const spotifyUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${redirectUri}`;
 
 let accessToken;
