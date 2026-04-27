@@ -1,99 +1,101 @@
-import React from 'react'
-import './App.css'
-import SearchBar from '../SearchBar/SearchBar'
-import SearchResults from '../SearchResults/SearchResults'
-import Playlist from '../Playlist/Playlist'
-// ตรวจสอบชื่อโฟลเดอร์ util หรือ utils ให้ตรงกัน
-import Spotify from '../../util/Spotify'
+const clientId = '43ae679652474f76819431e38e322c03'
+const redirectUri = window.location.href.includes('localhost')
+  ? 'http://localhost:5173/'
+  : 'https://spotify-jammming-olive.vercel.app/'
 
-class App extends React.Component {
-  constructor(props) {
-    super(props)
+let accessToken
 
-    this.state = {
-      searchResults: [],
-      playlistName: 'My Playlist',
-      playlistTracks: [],
+const Spotify = {
+  getAccessToken() {
+    if (accessToken) {
+      return accessToken
     }
 
-    // Binding methods
-    this.addTrack = this.addTrack.bind(this)
-    this.removeTrack = this.removeTrack.bind(this)
-    this.updatePlaylistName = this.updatePlaylistName.bind(this)
-    this.savePlaylist = this.savePlaylist.bind(this)
-    this.search = this.search.bind(this)
-  }
+    const accessTokenMatch = window.location.href.match(/access_token=([^&]*)/)
+    const expiresInMatch = window.location.href.match(/expires_in=([^&]*)/)
 
-  addTrack(track) {
-    let tracks = this.state.playlistTracks
-    if (tracks.find((savedTrack) => savedTrack.id === track.id)) {
-      return
+    if (accessTokenMatch && expiresInMatch) {
+      accessToken = accessTokenMatch[1]
+      const expiresIn = Number(expiresInMatch[1])
+
+      window.setTimeout(() => (accessToken = ''), expiresIn * 1000)
+      window.history.pushState('Access Token', null, '/')
+      return accessToken
+    } else {
+      // แก้ไข: ใช้ URL ของ Spotify และ Template Literal (${}) ที่ถูกต้อง
+      const accessUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${encodeURIComponent(
+        redirectUri,
+      )}`
+      window.location = accessUrl
     }
-    this.setState({ playlistTracks: [...tracks, track] })
-  }
+  },
 
-  removeTrack(track) {
-    let tracks = this.state.playlistTracks
-    tracks = tracks.filter((currentTrack) => currentTrack.id !== track.id)
-    this.setState({ playlistTracks: tracks })
-  }
-
-  updatePlaylistName(name) {
-    this.setState({ playlistName: name })
-  }
-
-  savePlaylist() {
-    const trackUris = this.state.playlistTracks.map((track) => track.uri)
-    if (!trackUris.length) {
-      alert('Please add some tracks to your playlist first!')
-      return
-    }
-
-    Spotify.savePlaylist(this.state.playlistName, trackUris).then(() => {
-      alert('Your playlist has been saved to Spotify!')
-      this.setState({
-        playlistName: 'New Playlist',
-        playlistTracks: [],
-      })
-    })
-  }
-
-  search(term) {
-    Spotify.search(term).then((results) => {
-      this.setState({ searchResults: results })
-    })
-  }
-
-  componentDidMount() {
-    // พยายามดึง Token ทันทีที่ App โหลด
-    Spotify.getAccessToken()
-  }
-
-  render() {
-    return (
-      <div>
-        <h1>
-          Ja<span className="highlight">mmm</span>ing
-        </h1>
-        <div className="App">
-          <SearchBar onSearch={this.search} />
-          <div className="App-playlist">
-            <SearchResults
-              searchResults={this.state.searchResults}
-              onAdd={this.addTrack}
-            />
-            <Playlist
-              playlistName={this.state.playlistName}
-              playlistTracks={this.state.playlistTracks}
-              onRemove={this.removeTrack}
-              onNameChange={this.updatePlaylistName}
-              onSave={this.savePlaylist}
-            />
-          </div>
-        </div>
-      </div>
+  async search(term) {
+    const token = Spotify.getAccessToken()
+    // แก้ไข: เพิ่ม type=track และใช้ URL API จริง
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?type=track&q=${encodeURIComponent(
+        term,
+      )}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     )
-  }
+
+    const jsonResponse = await response.json()
+    if (!jsonResponse.tracks) {
+      return []
+    }
+
+    return jsonResponse.tracks.items.map((track) => ({
+      id: track.id,
+      name: track.name,
+      artist: track.artists[0].name,
+      album: track.album.name,
+      uri: track.uri,
+    }))
+  },
+
+  async savePlaylist(name, trackUris) {
+    if (!name || !trackUris.length) {
+      return
+    }
+
+    const token = Spotify.getAccessToken()
+    const headers = { Authorization: `Bearer ${token}` }
+    let userId
+
+    // 1. ดึง User ID
+    const userRes = await fetch('https://api.spotify.com/v1/me', {
+      headers: headers,
+    })
+    const userJson = await userRes.json()
+    userId = userJson.id
+
+    // 2. สร้าง Playlist
+    const createRes = await fetch(
+      `https://api.spotify.com/v1/users/${userId}/playlists`,
+      {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ name: name }),
+      },
+    )
+    const playlistJson = await createRes.json()
+    const playlistId = playlistJson.id
+
+    // 3. เพิ่มเพลงลงใน Playlist
+    return await fetch(
+      `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
+      {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ uris: trackUris }),
+      },
+    )
+  },
 }
 
-export default App
+export default Spotify
