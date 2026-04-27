@@ -1,7 +1,5 @@
 const clientId = "43ae679652474f76819431e38e322c03";
-const redirectUri = window.location.href.includes('localhost')
-    ? "http://localhost:5173/"
-    : "https://spotify-jammming-olive.vercel.app/";
+const redirectUri = "https://spotify-jammming-olive.vercel.app"; // หรือ http://localhost:5173/ ถ้าเทสในเครื่อง
 
 let accessToken;
 
@@ -17,10 +15,12 @@ const Spotify = {
         if (accessTokenMatch && expiresInMatch) {
             accessToken = accessTokenMatch[1];
             const expiresIn = Number(expiresInMatch[1]);
+
             window.setTimeout(() => (accessToken = ""), expiresIn * 1000);
             window.history.pushState("Access Token", null, "/");
             return accessToken;
         } else {
+            // แก้ไข URL เป็นของ Spotify Accounts โดยตรง
             const accessUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${encodeURIComponent(redirectUri)}`;
             window.location = accessUrl;
         }
@@ -35,10 +35,12 @@ const Spotify = {
                 Authorization: `Bearer ${token}`
             }
         });
+
         const jsonResponse = await response.json();
         if (!jsonResponse.tracks) {
             return [];
         }
+
         return jsonResponse.tracks.items.map(track => ({
             id: track.id,
             name: track.name,
@@ -55,13 +57,12 @@ const Spotify = {
 
         const token = Spotify.getAccessToken();
         const headers = { Authorization: `Bearer ${token}` };
+        let userId;
 
-        // 1. Get User ID
         const userRes = await fetch("https://api.spotify.com/v1/me", { headers: headers });
         const userJson = await userRes.json();
-        const userId = userJson.id;
+        userId = userJson.id;
 
-        // 2. Create Playlist
         const createRes = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
             method: "POST",
             headers: headers,
@@ -70,7 +71,6 @@ const Spotify = {
         const playlistJson = await createRes.json();
         const playlistId = playlistJson.id;
 
-        // 3. Add Tracks to Playlist
         return await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
             method: "POST",
             headers: headers,
