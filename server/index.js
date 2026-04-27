@@ -1,34 +1,80 @@
-import express from "express";
-import fetch from "node-fetch";
-import cors from "cors";
+import express from 'express'
+import cors from 'cors'
+import dotenv from 'dotenv'
+import fetch from 'node-fetch'
 
-const app = express();
-app.use(cors());
+dotenv.config()
 
-const clientId = "bd8d25dac6e248f7b86fad927ae5879a";
-const clientSecret = "YOUR_CLIENT_SECRET";
-const redirectUri = "http://localhost:3000/callback";
+const app = express()
+app.use(cors())
+app.use(express.json())
 
-app.get("/api/token", async (req, res) => {
-    const code = req.query.code;
+const PORT = 3001
 
-    const response = await fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
+// ✅ test route
+app.get('/', (req, res) => {
+    res.send('Server is working!')
+})
+
+/*
+========================================
+🎧 Spotify API
+========================================
+*/
+
+const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID
+const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET
+
+let accessToken = ''
+
+// 🔑 ขอ token ใหม่ทุกครั้ง (กันพัง)
+const getAccessToken = async () => {
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
         headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            Authorization:
-                "Basic " +
-                Buffer.from(clientId + ":" + clientSecret).toString("base64"),
+            'Authorization':
+                'Basic ' +
+                Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64'),
+            'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-            grant_type: "authorization_code",
-            code,
-            redirect_uri: redirectUri,
-        }),
-    });
+        body: 'grant_type=client_credentials',
+    })
 
-    const data = await response.json();
-    res.json(data);
-});
+    const data = await response.json()
 
-app.listen(5000, () => console.log("Server running"));
+    console.log('🔑 TOKEN RESPONSE:', data)
+
+    accessToken = data.access_token
+}
+
+// 🔍 search endpoint
+app.get('/search', async (req, res) => {
+    const query = req.query.q
+
+    try {
+        // ✅ ขอ token ใหม่ทุกครั้ง (แก้ปัญหา 401 / empty)
+        await getAccessToken()
+
+        const response = await fetch(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`,
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            }
+        )
+
+        const data = await response.json()
+
+        console.log('🔥 SPOTIFY DATA:', JSON.stringify(data, null, 2))
+
+        res.json(data.tracks?.items || [])
+    } catch (error) {
+        console.error('❌ ERROR:', error)
+        res.status(500).json([])
+    }
+})
+
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`)
+})
