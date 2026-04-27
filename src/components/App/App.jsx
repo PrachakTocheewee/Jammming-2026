@@ -3,7 +3,7 @@ import './App.css'
 import SearchBar from '../SearchBar/SearchBar'
 import SearchResults from '../SearchResults/SearchResults'
 import Playlist from '../Playlist/Playlist'
-import Spotify from '../../util/Spotify' // ถอย 2 ชั้น (../../) เพื่อออกไปหาโฟลเดอร์ util
+import Spotify from '../../utils/Spotify' // ถอย 2 ชั้น (../../) เพื่อออกไปหาโฟลเดอร์ util
 
 class App extends React.Component {
   constructor(props) {
