@@ -1,5 +1,5 @@
 const clientId = "43ae679652474f76819431e38e322c03";
-const redirectUri = "https://spotify-jammming-olive.vercel.app"; // หรือ http://localhost:5173/ ถ้าเทสในเครื่อง
+const redirectUri = "https://spotify-jammming-olive.vercel.app/";
 
 let accessToken;
 
@@ -20,7 +20,8 @@ const Spotify = {
             window.history.pushState("Access Token", null, "/");
             return accessToken;
         } else {
-            // แก้ไข URL เป็นของ Spotify Accounts โดยตรง
+            // แก้ไข: ต้องใช้ URL จริงของ Spotify (accounts.spotify.com)
+            // และต้องใช้เครื่องหมาย ` (Backtick) พร้อมกับ ${clientId} เท่านั้น
             const accessUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${encodeURIComponent(redirectUri)}`;
             window.location = accessUrl;
         }
@@ -30,6 +31,7 @@ const Spotify = {
         const token = Spotify.getAccessToken();
         if (!token) return [];
 
+        // แก้ไข: ใช้ API ของ Spotify จริงๆ (api.spotify.com)
         const response = await fetch(`https://api.spotify.com/v1/search?type=track&q=${encodeURIComponent(term)}`, {
             headers: {
                 Authorization: `Bearer ${token}`
