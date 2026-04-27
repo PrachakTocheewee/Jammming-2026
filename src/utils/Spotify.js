@@ -1,8 +1,8 @@
-const clientId = "b2592ea953504e46bafdef956d077f24";
+const clientId = "43ae679652474f76819431e38e322c03";
 // ปรับเป็นพอร์ต 5173 ตามหน้าจอของคุณ
 const redirectUri = window.location.href.includes('localhost')
     ? "http://localhost:5173/"
-    : "https://jammming-prachak-2026.surge.sh/";
+    : "https://spotify-jammming-olive.vercel.app";
 
 let accessToken;
 
